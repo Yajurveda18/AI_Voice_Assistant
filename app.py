@@ -1,5 +1,6 @@
 import sounddevice as sd
 from scipy.io.wavfile import write
+import numpy as np
 import speech_recognition as sr
 import pyttsx3
 import wikipedia
@@ -16,11 +17,17 @@ def listen():
     seconds = 5
 
     print("Listening...")
+
     recording = sd.rec(int(seconds * fs), samplerate=fs, channels=1)
     sd.wait()
+
+    # Convert float audio to int16 PCM
+    recording = np.int16(recording * 32767)
+
     write("voice.wav", fs, recording)
 
     r = sr.Recognizer()
+
     with sr.AudioFile("voice.wav") as source:
         audio = r.record(source)
 
@@ -35,13 +42,13 @@ def listen():
 while True:
     command = listen()
 
-    if "wikipedia" in command:
+    if "hello" in command:
+        speak("Hello, how can I help you?")
+
+    elif "wikipedia" in command:
         topic = command.replace("wikipedia", "")
         result = wikipedia.summary(topic, sentences=2)
         speak(result)
-
-    elif "hello" in command:
-        speak("Hello, how can I help you?")
 
     elif "exit" in command:
         speak("Goodbye")

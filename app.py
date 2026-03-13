@@ -3,6 +3,8 @@ import wikipedia
 import speech_recognition as sr
 from gtts import gTTS
 from streamlit_mic_recorder import mic_recorder
+import io
+import wave
 
 st.title("AI Voice Assistant")
 
@@ -17,18 +19,27 @@ audio = mic_recorder(start_prompt="🎤 Start recording",
 voice_text = ""
 
 if audio:
-    with open("voice.wav", "wb") as f:
-        f.write(audio['bytes'])
+
+    # Convert audio bytes to proper WAV
+    wav_bytes = io.BytesIO(audio['bytes'])
+
+    with wave.open("voice.wav", "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(44100)
+        wf.writeframes(wav_bytes.read())
 
     r = sr.Recognizer()
-    with sr.AudioFile("voice.wav") as source:
-        audio_data = r.record(source)
 
     try:
+        with sr.AudioFile("voice.wav") as source:
+            audio_data = r.record(source)
+
         voice_text = r.recognize_google(audio_data)
         st.write("You said:", voice_text)
-    except:
-        st.write("Could not understand voice")
+
+    except Exception as e:
+        st.write("Voice recognition failed")
 
 # -------- COMBINED INPUT --------
 query = text_input if text_input else voice_text
@@ -36,7 +47,7 @@ query = text_input if text_input else voice_text
 if query:
 
     if "wikipedia" in query:
-        topic = query.replace("wikipedia", "")
+        topic = query.replace("wikipedia","")
         result = wikipedia.summary(topic, sentences=2)
 
     elif "hello" in query:
@@ -47,8 +58,9 @@ if query:
 
     st.write(result)
 
-    # Voice output
+    # Convert text to speech
     tts = gTTS(result)
     tts.save("answer.mp3")
-    audio_file = open("answer.mp3", "rb")
+
+    audio_file = open("answer.mp3","rb")
     st.audio(audio_file.read(), format="audio/mp3")

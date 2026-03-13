@@ -1,55 +1,15 @@
-import sounddevice as sd
-from scipy.io.wavfile import write
-import numpy as np
-import speech_recognition as sr
-import pyttsx3
+import streamlit as st
 import wikipedia
 
-engine = pyttsx3.init()
+st.title("AI Assistant")
 
-def speak(text):
-    print("Assistant:", text)
-    engine.say(text)
-    engine.runAndWait()
+user_input = st.text_input("Ask something")
 
-def listen():
-    fs = 44100
-    seconds = 5
-
-    print("Listening...")
-
-    recording = sd.rec(int(seconds * fs), samplerate=fs, channels=1)
-    sd.wait()
-
-    # Convert float audio to int16 PCM
-    recording = np.int16(recording * 32767)
-
-    write("voice.wav", fs, recording)
-
-    r = sr.Recognizer()
-
-    with sr.AudioFile("voice.wav") as source:
-        audio = r.record(source)
-
-    try:
-        command = r.recognize_google(audio)
-        print("You said:", command)
-        return command.lower()
-    except:
-        print("Could not understand")
-        return ""
-
-while True:
-    command = listen()
-
-    if "hello" in command:
-        speak("Hello, how can I help you?")
-
-    elif "wikipedia" in command:
-        topic = command.replace("wikipedia", "")
+if user_input:
+    if "wikipedia" in user_input:
+        topic = user_input.replace("wikipedia","")
         result = wikipedia.summary(topic, sentences=2)
-        speak(result)
+        st.write(result)
 
-    elif "exit" in command:
-        speak("Goodbye")
-        break
+    elif "hello" in user_input:
+        st.write("Hello, how can I help you?")

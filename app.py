@@ -1,6 +1,6 @@
 import speech_recognition as sr
 import pyttsx3
-from model import process_command
+import wikipedia
 
 engine = pyttsx3.init()
 
@@ -11,35 +11,28 @@ def speak(text):
 
 def listen():
     r = sr.Recognizer()
-
     with sr.Microphone() as source:
         print("Listening...")
-        r.adjust_for_ambient_noise(source)
         audio = r.listen(source)
 
     try:
         command = r.recognize_google(audio)
         print("You said:", command)
         return command.lower()
-
     except:
-        print("Could not understand")
         return ""
 
-def main():
-    speak("Voice assistant started")
+while True:
+    command = listen()
 
-    while True:
-        command = listen()
+    if "wikipedia" in command:
+        topic = command.replace("wikipedia", "")
+        result = wikipedia.summary(topic, sentences=2)
+        speak(result)
 
-        if command == "":
-            continue
+    elif "hello" in command:
+        speak("Hello, how can I help you?")
 
-        if "exit" in command:
-            speak("Goodbye")
-            break
-
-        process_command(command, speak)
-
-if __name__ == "__main__":
-    main()
+    elif "exit" in command:
+        speak("Goodbye")
+        break
